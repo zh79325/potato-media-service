@@ -1,10 +1,6 @@
 package potato.media.storage.redis;
 
 
-import redis.embedded.RedisExecProvider;
-import redis.embedded.RedisServer;
-import redis.embedded.util.Architecture;
-import redis.embedded.util.OS;
 
 import java.io.File;
 

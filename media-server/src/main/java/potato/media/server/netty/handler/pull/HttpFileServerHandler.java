@@ -192,12 +192,5 @@ public class HttpFileServerHandler extends
     }
 
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent) {
-            ctx.close();
-        } else {
-            super.userEventTriggered(ctx, evt);
-        }
-    }
+
 }
