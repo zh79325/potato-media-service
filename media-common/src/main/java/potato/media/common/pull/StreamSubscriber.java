@@ -10,35 +10,47 @@ import org.apache.commons.lang3.RandomStringUtils;
 public class StreamSubscriber {
     private String channelId;
     private String host;
-    private long streamId;
+    private String target;
+    private String owner;
     private String id;
 
-    public void setChannelId(String channelId) {
-        this.channelId = channelId;
+
+
+    public void buildId() {
+        id= System.currentTimeMillis()+RandomStringUtils.random(10,true,true);
     }
+
 
     public String getChannelId() {
         return channelId;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setChannelId(String channelId) {
+        this.channelId = channelId;
     }
 
     public String getHost() {
         return host;
     }
 
-    public void setStreamId(long streamId) {
-        this.streamId = streamId;
+    public void setHost(String host) {
+        this.host = host;
     }
 
-    public long getStreamId() {
-        return streamId;
+    public String getTarget() {
+        return target;
     }
 
-    public void buildId() {
-        id= System.currentTimeMillis()+RandomStringUtils.random(10,true,true);
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     public String getId() {

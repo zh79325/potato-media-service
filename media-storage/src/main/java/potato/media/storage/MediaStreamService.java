@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import potato.media.common.pull.StreamSubscriber;
 import potato.media.common.stream.ClientStream;
 
-import javax.xml.ws.ServiceMode;
+import java.util.Map;
 
 /**
  * @author zh_zhou
@@ -19,6 +19,9 @@ public class MediaStreamService {
 
     SubscriberStorage subscriberStorage;
 
+    @Autowired
+
+
     public void setStreamStorage(StreamStorage streamStorage) {
         this.streamStorage = streamStorage;
     }
@@ -27,18 +30,19 @@ public class MediaStreamService {
         this.subscriberStorage = subscriberStorage;
     }
 
-    public ClientStream getStream(long streamId) {
-        return streamStorage.getStream(streamId);
+
+    public StreamSubscriber unsubscribe(String userId, String targetUid) {
+        return subscriberStorage.unsubscribe(userId, targetUid);
     }
 
-    public void registerSubscribe(StreamSubscriber subscriber) {
-        subscriberStorage.saveSubscriber(subscriber.getStreamId(), subscriber);
+    public void subscribe(String userId, StreamSubscriber subscriber) {
+        subscriberStorage.subscribe(userId, subscriber);
     }
 
-    public void unregister(StreamSubscriber subscriber) {
-        if (subscriber == null) {
-            return;
-        }
-        subscriberStorage.removeSubscriber(subscriber.getStreamId(), subscriber);
+
+
+    public Map<String, StreamSubscriber> getSubscribers(String userId) {
+        Map<String, StreamSubscriber> subscribers = subscriberStorage.getSubscribers(userId);
+        return subscribers;
     }
 }

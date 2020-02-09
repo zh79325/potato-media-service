@@ -4,10 +4,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.common.utils.NetUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import potato.media.server.netty.handler.pull.HttpFileServerHandler;
 
 import java.net.*;
 import java.util.Enumeration;

@@ -1,10 +1,14 @@
 package potato.media.server;
 
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.ActorSystem;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import potato.media.server.akka.AkkaMessage;
+import potato.media.server.akka.AkkaStreamActor;
 import potato.media.server.dubbo.MediaStreamTransportLocalService;
 import potato.media.server.dubbo.command.HelloCommand;
 import potato.media.server.util.NettyUtil;
@@ -24,6 +28,8 @@ import static org.apache.dubbo.config.Constants.DUBBO_IP_TO_REGISTRY;
 @EnableScheduling
 public class MediaMainServer {
     static ApplicationContext context;
+    public static ActorSystem<AkkaMessage> akkaMain ;
+
     public static void main(String[] args) {
         String local = NettyUtil.getIpAddress();
         System.setProperty(DUBBO_IP_TO_REGISTRY, local);
@@ -32,6 +38,7 @@ public class MediaMainServer {
         MediaStreamService streamService=getBean(MediaStreamService.class);
         streamService.setStreamStorage(getBean(MemStorage.class));
         streamService.setSubscriberStorage(getBean(MemStorage.class));
+        akkaMain = ActorSystem.create(AkkaStreamActor.create(), "im3_akka");
         startDubbo();
         new Thread(()->{
             context.getBean(MediaStreamTransportLocalService.class).sayHello(new HelloCommand("abcd").build());
@@ -49,4 +56,9 @@ public class MediaMainServer {
     public static <T>  T getBean(Class<T> tClass){
         return context.getBean(tClass);
     }
+
+    public static ActorRef<AkkaMessage> createActor(String id) {
+        return akkaMain.systemActorOf(AkkaStreamActor.create(),id,akkaMain.systemActorOf$default$3());
+    }
+
 }

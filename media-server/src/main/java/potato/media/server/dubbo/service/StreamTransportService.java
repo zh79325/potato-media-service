@@ -1,6 +1,7 @@
 package potato.media.server.dubbo.service;
 
 import potato.media.server.dubbo.command.HelloCommand;
+import potato.media.server.dubbo.command.SendStreamCommand;
 
 /**
  * @author zh_zhou
@@ -9,4 +10,6 @@ import potato.media.server.dubbo.command.HelloCommand;
  */
 public interface StreamTransportService {
     String sayHello(HelloCommand command);
+
+    boolean sendStreamData(SendStreamCommand command);
 }

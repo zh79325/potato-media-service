@@ -17,31 +17,34 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class MemStorage implements StreamStorage, SubscriberStorage {
-    Map<Long, ClientStream> streamMap = new HashMap<>();
-    Map<Long, Map<String, StreamSubscriber>> subMap = new ConcurrentHashMap<>();
+    Map<String, ClientStream> streamMap = new HashMap<>();
+    Map<String, Map<String, StreamSubscriber>> subMap = new ConcurrentHashMap<>();
 
     @Override
     public ClientStream getStream(long streamId) {
         return streamMap.get(streamId);
     }
 
+
     @Override
-    public void saveSubscriber(long streamId, StreamSubscriber subscriber) {
-        if (subMap.containsKey(streamId)) {
-            subMap.put(streamId, new ConcurrentHashMap<>());
-        }
-        subMap.get(streamId).put(subscriber.getId(), subscriber);
+    public void subscribe(String owner, StreamSubscriber subscriber) {
+
     }
 
     @Override
-    public void removeSubscriber(long streamId, StreamSubscriber subscriber) {
-        if (!subMap.containsKey(streamId)) {
-            return;
+    public StreamSubscriber unsubscribe(String owner, String targetUid) {
+        Map<String, StreamSubscriber> subscriberMap=subMap.get(targetUid);
+        if(subscriberMap==null){
+            return null;
         }
-        Map<String, StreamSubscriber> map = subMap.get(streamId);
-        map.remove(subscriber.getId());
-        if (map.isEmpty()) {
-            subMap.remove(streamId);
-        }
+        StreamSubscriber subscriber= subscriberMap.remove(owner);
+        return subscriber;
     }
+
+    @Override
+    public Map<String, StreamSubscriber> getSubscribers(String userId) {
+        return subMap.get(userId);
+    }
+
+
 }

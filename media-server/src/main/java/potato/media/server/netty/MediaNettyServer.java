@@ -9,17 +9,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.HttpRequestHandler;
-import potato.media.server.netty.handler.SocketChooseHandle;
 import potato.media.server.netty.handler.StreamMessageDecoder;
 import potato.media.server.netty.handler.StreamMessageEncoder;
+import potato.media.server.netty.handler.ClientStreamHandler;
 
 import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
@@ -61,9 +58,9 @@ public class MediaNettyServer {
                             p.addLast("lengthFrameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024 * 50, 0, 4, 0, 4));
                             p.addLast("message-decode", new StreamMessageDecoder());
                             p.addLast("message-encode", new StreamMessageEncoder());
-                            p.addLast("choose-handle", new SocketChooseHandle());
                             p.addLast("idleStateHandler", new IdleStateHandler(60, 60, 60, TimeUnit.SECONDS));
-                        }
+                            p.addLast("client-handler",new ClientStreamHandler())
+;                        }
                     });
 
             bootstrap.bind(serverPort)

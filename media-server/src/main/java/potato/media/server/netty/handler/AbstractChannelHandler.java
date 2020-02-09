@@ -2,9 +2,14 @@ package potato.media.server.netty.handler;
 
 import io.netty.channel.*;
 import io.netty.handler.timeout.IdleStateEvent;
+import org.apache.commons.lang3.StringUtils;
 import potato.media.common.message.MediaStreamHead;
 import potato.media.common.message.MediaStreamMessage;
 import potato.media.common.message.MediaStreamType;
+import potato.media.common.message.StreamMessageUtil;
+import potato.media.common.message.auth.AuthMessage;
+import potato.media.common.message.auth.AuthResult;
+import potato.media.common.message.info.InfoType;
 
 import java.net.SocketAddress;
 import java.util.HashSet;
@@ -26,6 +31,10 @@ public abstract class AbstractChannelHandler extends SimpleChannelInboundHandler
     int heartBeatFailNum = 0;
     private ScheduledFuture<?> heartbeatScheduledFuture;
     Set<String> pingArray = new HashSet<>();
+
+    protected String userId;
+
+    boolean authed;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -108,29 +117,60 @@ public abstract class AbstractChannelHandler extends SimpleChannelInboundHandler
         if (type == null) {
             return;
         }
+        if (type.isServerIgnore()) {
+            return;
+        }
         switch (type) {
-            case PushClientInit:
-            case PullClientInit:
-                //ignore
-                break;
             case Ping:
-                MediaStreamMessage pong = new MediaStreamMessage(Pong);
+                MediaStreamMessage pong = StreamMessageUtil.create(Pong, null);
                 pong.getHead().setParentId(head.getMid());
                 ctx.channel().write(pong);
                 break;
             case Pong:
-                String pid=msg.getHead().getParentId();
+                String pid = msg.getHead().getParentId();
                 pingArray.remove(pid);
                 break;
+            case Auth:
+                AuthMessage authMessage = StreamMessageUtil.parse(msg, AuthMessage.class);
+                validateAuth(ctx, authMessage);
+                break;
             default:
-                messageRead(ctx, msg);
+                if(authed){
+                    sendError(ctx,"not authed");
+                }else {
+                    messageRead(ctx, type,head,msg);
+                }
                 break;
 
         }
 
     }
 
-    protected abstract void messageRead(ChannelHandlerContext ctx, MediaStreamMessage msg);
+
+    private void sendError(ChannelHandlerContext ctx, String message) {
+        MediaStreamMessage msg = StreamMessageUtil.createInfo(InfoType.Error, message);
+        ctx.write(msg);
+        ctx.close();
+        destory();
+    }
+
+    private void validateAuth(ChannelHandlerContext ctx, AuthMessage authMessage) {
+        userId = authMessage.getUid();
+        AuthResult result = new AuthResult();
+        if (StringUtils.isEmpty(userId)) {
+            result.setSuccess(false);
+        } else {
+            result.setSuccess(true);
+            authed=true;
+        }
+        MediaStreamMessage message = StreamMessageUtil.create(MediaStreamType.AuthResp, result);
+        ctx.channel().write(message);
+        if (!result.isSuccess()) {
+            sendError(ctx,"auth failed");
+        }
+    }
+
+    protected abstract void messageRead(ChannelHandlerContext ctx, MediaStreamType type, MediaStreamHead head, MediaStreamMessage msg);
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
@@ -150,7 +190,7 @@ public abstract class AbstractChannelHandler extends SimpleChannelInboundHandler
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
-            MediaStreamMessage ping = new MediaStreamMessage(Ping);
+            MediaStreamMessage ping = StreamMessageUtil.create(Ping, null);
             pingArray.add(ping.getHead().getMid());
             ctx.channel().write(ping)
                     .addListener(f -> {

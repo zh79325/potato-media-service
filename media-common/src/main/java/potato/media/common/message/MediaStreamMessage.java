@@ -14,14 +14,7 @@ import java.nio.charset.Charset;
  * Copyright [2020] [zh_zhou]
  */
 public class MediaStreamMessage implements Serializable {
-    public MediaStreamMessage() {
-    }
 
-    public MediaStreamMessage(MediaStreamType type){
-        head=new MediaStreamHead();
-        head.setType(type);
-        head.build();
-    }
 
     MediaStreamHead head;
     byte[] data;
@@ -29,22 +22,30 @@ public class MediaStreamMessage implements Serializable {
     public byte[] encode() {
         ByteBuf buf = Unpooled.buffer();
         byte[] headBytes = head.encode();
-        int totalLength = headBytes.length + data.length;
+
+        int totalLength = headBytes.length;
+        if(data!=null){
+            totalLength+=data.length;
+        }
         buf.writeInt(totalLength);
         buf.writeBytes(headBytes);
-        buf.writeBytes(data);
+        if(data!=null){
+            buf.writeBytes(data);
+        }
         return MessageUtil.getBytes(buf);
     }
 
     public static MediaStreamMessage decode(ByteBuf buf) {
         MediaStreamHead head = new MediaStreamHead();
         head.decode(buf);
-        byte[] data = new byte[buf.readableBytes()];
-        buf.readBytes(data);
 
         MediaStreamMessage message = new MediaStreamMessage();
-        message.setData(data);
         message.setHead(head);
+        if(buf.readableBytes()>0){
+            byte[] data = new byte[buf.readableBytes()];
+            buf.readBytes(data);
+            message.setData(data);
+        }
         return message;
     }
 
