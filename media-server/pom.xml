@@ -20,6 +20,14 @@
             <groupId>potato.media</groupId>
             <artifactId>media-storage</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.name}-release</finalName>
