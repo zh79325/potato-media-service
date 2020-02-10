@@ -5,8 +5,6 @@ import io.netty.buffer.Unpooled;
 import potato.media.common.util.MessageUtil;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 /**
  * @author zh_zhou
@@ -22,22 +20,19 @@ public class MediaStreamMessage implements Serializable {
     public byte[] encode() {
         ByteBuf buf = Unpooled.buffer();
         byte[] headBytes = head.encode();
-
-        int totalLength = headBytes.length;
-        if(data!=null){
-            totalLength+=data.length;
-        }
-        buf.writeInt(totalLength);
         buf.writeBytes(headBytes);
         if(data!=null){
             buf.writeBytes(data);
         }
-        return MessageUtil.getBytes(buf);
+        return MessageUtil.wrap(buf);
     }
 
     public static MediaStreamMessage decode(ByteBuf buf) {
         MediaStreamHead head = new MediaStreamHead();
-        head.decode(buf);
+        int headLength=buf.readInt();
+        ByteBuf headBuf=Unpooled.buffer(headLength);
+        buf.readBytes(headBuf,headLength);
+        head.decode(headBuf);
 
         MediaStreamMessage message = new MediaStreamMessage();
         message.setHead(head);

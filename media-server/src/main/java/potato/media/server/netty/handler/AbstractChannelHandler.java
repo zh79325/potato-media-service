@@ -10,6 +10,7 @@ import potato.media.common.message.StreamMessageUtil;
 import potato.media.common.message.auth.AuthMessage;
 import potato.media.common.message.auth.AuthResult;
 import potato.media.common.message.info.InfoType;
+import potato.media.server.netty.MediaNettyServer;
 
 import java.net.SocketAddress;
 import java.util.HashSet;
@@ -149,7 +150,7 @@ public abstract class AbstractChannelHandler extends SimpleChannelInboundHandler
 
     private void sendError(ChannelHandlerContext ctx, String message) {
         MediaStreamMessage msg = StreamMessageUtil.createInfo(InfoType.Error, message);
-        ctx.write(msg);
+        ctx.writeAndFlush(msg);
         ctx.close();
         destory();
     }
@@ -164,7 +165,9 @@ public abstract class AbstractChannelHandler extends SimpleChannelInboundHandler
             authed=true;
         }
         MediaStreamMessage message = StreamMessageUtil.create(MediaStreamType.AuthResp, result);
-        ctx.channel().write(message);
+        ctx.channel().writeAndFlush(message).addListener(f->{
+            System.out.println(f);
+        });
         if (!result.isSuccess()) {
             sendError(ctx,"auth failed");
         }
@@ -187,12 +190,18 @@ public abstract class AbstractChannelHandler extends SimpleChannelInboundHandler
         heartBeatFailNum = 0;
     }
 
+    long lastHeartBeat=0;
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
+            long now=System.currentTimeMillis();
+            if(now-lastHeartBeat<=TimeUnit.SECONDS.toMillis(MediaNettyServer.MAX_IDLE_TIME)){
+                return;
+            }
+            lastHeartBeat=now;
             MediaStreamMessage ping = StreamMessageUtil.create(Ping, null);
             pingArray.add(ping.getHead().getMid());
-            ctx.channel().write(ping)
+            ctx.channel().writeAndFlush(ping)
                     .addListener(f -> {
                         if (!f.isSuccess()) {
                             heartBeatFailNum++;

@@ -36,9 +36,14 @@ public class MediaNettyServer {
     private EventLoopGroup workerGroup = null;
     private ServerBootstrap bootstrap = null;
 
+    public static final  int MAX_IDLE_TIME=10;
+
     @PostConstruct
     void startNettyServer(){
-        System.out.println(serverPort);
+
+        new Thread(()->{
+            start();
+        }).start();
     }
 
     public void start() {
@@ -58,7 +63,7 @@ public class MediaNettyServer {
                             p.addLast("lengthFrameDecoder", new LengthFieldBasedFrameDecoder(1024 * 1024 * 50, 0, 4, 0, 4));
                             p.addLast("message-decode", new StreamMessageDecoder());
                             p.addLast("message-encode", new StreamMessageEncoder());
-                            p.addLast("idleStateHandler", new IdleStateHandler(60, 60, 60, TimeUnit.SECONDS));
+                            p.addLast("idleStateHandler", new IdleStateHandler(MAX_IDLE_TIME, MAX_IDLE_TIME, MAX_IDLE_TIME, TimeUnit.SECONDS));
                             p.addLast("client-handler",new ClientStreamHandler())
 ;                        }
                     });

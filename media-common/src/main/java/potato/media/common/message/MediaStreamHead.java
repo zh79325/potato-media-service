@@ -55,7 +55,7 @@ public class MediaStreamHead {
             buf.writeInt(pidBytes.length);
             buf.writeBytes(pidBytes);
         }
-        return MessageUtil.getBytes(buf);
+        return MessageUtil.wrap(buf);
     }
 
     public void decode(ByteBuf buf) {
@@ -77,6 +77,6 @@ public class MediaStreamHead {
     }
 
     public void build() {
-        mid=System.currentTimeMillis()+ RandomStringUtils.random(10);
+        mid=System.currentTimeMillis()+ RandomStringUtils.random(10,true,true);
     }
 }

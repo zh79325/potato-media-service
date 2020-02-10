@@ -1,6 +1,7 @@
 package potato.media.common.util;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.nio.charset.Charset;
 
@@ -18,11 +19,14 @@ public class MessageUtil {
         return new String(bytes,UTF8);
     }
 
-    public static byte[] getBytes(ByteBuf buf) {
+    public static byte[] wrap(ByteBuf buf) {
         buf.markReaderIndex();
-        byte[] result=new byte[buf.readableBytes()];
-        buf.readBytes(result);
+        ByteBuf r= Unpooled.buffer();
+        r.writeInt(buf.readableBytes());
+        r.writeBytes(buf);
         buf.resetReaderIndex();
+        byte[] result=new byte[r.readableBytes()];
+        r.readBytes(result);
         return result;
     }
 }
